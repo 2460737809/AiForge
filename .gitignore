@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Production builds
+/dist
+/build
+
+# Environment
+.env*.local
+.env*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+.nyc_output
+
+# Vite
+.vite/
+
+# Nuxt
+.nuxt
+.output
+dist/
+
+# Vue
+.vuepress/dist
+coverage/
+
+# TypeScript
+node_modules/
+dist/
+dist-ssr/
+*.local.js
+*.local.cjs
+*.local.mjs
+
+# Local files
+.DS_Store
+*.log
+.env.local
+.env.*.local
