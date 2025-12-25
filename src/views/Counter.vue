@@ -306,7 +306,24 @@ const formatTime = (timestamp) => {
   .history-list {
     max-height: 300px;
     overflow-y: auto;
-    @include scrollbar;
+    /* 自定义滚动条样式 */
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.5);
+    }
     
     .history-item {
       display: flex;
@@ -415,7 +432,7 @@ const formatTime = (timestamp) => {
     background: var(--primary-color);
     
     &:hover {
-      background: darken($primary-color, 10%);
+      background: color-mix(in srgb, var(--primary-color) 80%, black);
       transform: translateY(-2px);
     }
   }
@@ -424,7 +441,7 @@ const formatTime = (timestamp) => {
     background: var(--danger-color);
     
     &:hover {
-      background: darken($danger-color, 10%);
+      background: color-mix(in srgb, var(--danger-color) 80%, black);
       transform: translateY(-2px);
     }
   }
@@ -433,7 +450,7 @@ const formatTime = (timestamp) => {
     background: var(--warning-color);
     
     &:hover {
-      background: darken($warning-color, 10%);
+      background: color-mix(in srgb, var(--warning-color) 80%, black);
       transform: translateY(-2px);
     }
   }
@@ -442,7 +459,7 @@ const formatTime = (timestamp) => {
     background: var(--success-color);
     
     &:hover {
-      background: darken($success-color, 10%);
+      background: color-mix(in srgb, var(--success-color) 80%, black);
       transform: translateY(-2px);
     }
   }
@@ -451,7 +468,7 @@ const formatTime = (timestamp) => {
     background: var(--text-secondary);
     
     &:hover {
-      background: darken($text-secondary, 10%);
+      background: color-mix(in srgb, var(--text-secondary) 80%, black);
       transform: translateY(-2px);
     }
   }
@@ -460,7 +477,7 @@ const formatTime = (timestamp) => {
     background: var(--info-color);
     
     &:hover {
-      background: darken($info-color, 10%);
+      background: color-mix(in srgb, var(--info-color) 80%, black);
       transform: translateY(-2px);
     }
   }

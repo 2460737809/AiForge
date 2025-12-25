@@ -398,7 +398,7 @@ onUnmounted(() => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: darken($primary-color, 10%);
+      background: color-mix(in srgb, var(--primary-color) 80%, black);
     }
   }
   
@@ -407,7 +407,7 @@ onUnmounted(() => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: darken($text-secondary, 10%);
+      background: color-mix(in srgb, var(--text-secondary) 80%, black);
     }
   }
   
@@ -416,7 +416,7 @@ onUnmounted(() => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: darken($success-color, 10%);
+      background: color-mix(in srgb, var(--success-color) 80%, black);
     }
   }
   
@@ -425,7 +425,7 @@ onUnmounted(() => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: darken($warning-color, 10%);
+      background: color-mix(in srgb, var(--warning-color) 80%, black);
     }
   }
   
@@ -434,7 +434,7 @@ onUnmounted(() => {
     color: white;
     
     &:hover:not(:disabled) {
-      background: darken($info-color, 10%);
+      background: color-mix(in srgb, var(--info-color) 80%, black);
     }
   }
 }
