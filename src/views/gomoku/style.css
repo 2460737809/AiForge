@@ -221,7 +221,13 @@
 }
 
 .piece:hover {
+  /* 只对空位应用悬停效果，已落子的位置不应用缩放 */
   transform: translate(-50%, -50%) scale(1.1);
+}
+
+.piece.placed:hover {
+  /* 已落子的位置不应用悬停缩放效果 */
+  transform: translate(-50%, -50%) scale(1);
 }
 
 .piece.black {

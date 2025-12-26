@@ -19,14 +19,12 @@
       <template v-for="(row, rIdx) in board" :key="'r' + rIdx">
         <div v-for="(cell, cIdx) in row" :key="'c' + cIdx">
           <transition name="fade">
-            <div v-if="cell" :class="['piece', cell]" :style="getPieceStyle(rIdx, cIdx)">
+            <div v-if="cell" :class="['piece', cell, 'placed']" :style="getPieceStyle(rIdx, cIdx)">
               <div v-if="isLastMove(rIdx, cIdx)" class="last-mark"></div>
             </div>
           </transition>
         </div>
       </template>
-
-      <div v-if="winnerLine" class="win-line-overlay"></div>
     </main>
 
     <footer class="game-footer">
