@@ -56,6 +56,15 @@ const routes = [
       keepAlive: true
     }
   },
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: () => import('@/views/calendar/Calendar.vue'),
+    meta: {
+      title: '日历',
+      keepAlive: true
+    }
+  },
   // 404页面
   {
     path: '/:pathMatch(.*)*',

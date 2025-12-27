@@ -103,6 +103,14 @@ const features = ref([
   },
   {
     id: 8,
+    icon: '📅',
+    title: '日历',
+    description: '公历农历对照，节假日倒计时',
+    link: '/calendar',
+    clickable: true
+  },
+  {
+    id: 9,
     icon: '🌐',
     title: '国际化',
     description: '内置i18n支持，轻松实现多语言切换'
