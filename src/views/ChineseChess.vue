@@ -10,7 +10,7 @@
         <div class="game-status">{{ gameStatus }}</div>
       </div>
       <div class="control-buttons">
-        <button @click="startGame" class="btn btn-primary" v-if="!gameStarted && gameMode === 'pvc'">开始游戏</button>
+        <button @click="startGame" class="btn btn-primary" v-if="!gameStarted">开始游戏</button>
         <button @click="resetGame" class="btn btn-primary" v-else>重新开始</button>
         <button @click="undoMove" :disabled="moveHistory.length === 0" class="btn btn-secondary">悔棋</button>
         <button @click="showTacticsInfo = true" class="btn btn-secondary">战术知识</button>
@@ -89,17 +89,6 @@
     </div>
 
     <div class="chess-board-wrapper">
-      <!-- 红方被吃棋子 -->
-      <div class="captured-pieces red-captured">
-        <h4>红方失子</h4>
-        <div class="pieces-list">
-          <div v-for="(piece, index) in capturedPieces.red" :key="'red-' + index" class="captured-piece" :style="getSkinStyle(currentSkin, 'red')">
-            {{ piece.name }}
-          </div>
-          <div v-if="capturedPieces.red.length === 0" class="no-pieces">无</div>
-        </div>
-      </div>
-
       <div class="chess-board" :style="currentBoardSkinStyle" :class="{ flipped: isBoardFlipped }">
         <!-- 棋盘线条 -->
         <svg class="board-lines" viewBox="0 0 540 600" xmlns="http://www.w3.org/2000/svg">
@@ -209,7 +198,32 @@
           </div>
         </transition>
       </div>
-
+      
+      <!-- 被吃棋子区域 -->
+      <div class="captured-pieces-container">
+        <!-- 红方被吃棋子 -->
+        <div class="captured-pieces red-captured">
+          <h4>红方失子</h4>
+          <div class="pieces-list">
+            <div v-for="(piece, index) in capturedPieces.red" :key="'red-' + index" class="captured-piece" :style="getSkinStyle(currentSkin, 'red')">
+              {{ piece.name }}
+            </div>
+            <div v-if="capturedPieces.red.length === 0" class="no-pieces">无</div>
+          </div>
+        </div>
+        
+        <!-- 黑方被吃棋子 -->
+        <div class="captured-pieces black-captured">
+          <h4>黑方失子</h4>
+          <div class="pieces-list">
+            <div v-for="(piece, index) in capturedPieces.black" :key="'black-' + index" class="captured-piece" :style="getSkinStyle(currentSkin, 'black')">
+              {{ piece.name }}
+            </div>
+            <div v-if="capturedPieces.black.length === 0" class="no-pieces">无</div>
+          </div>
+        </div>
+      </div>
+      
       <!-- 移动历史 -->
       <div class="move-history">
         <h3>棋谱记录</h3>
@@ -229,17 +243,15 @@
           </div>
         </div>
       </div>
-
-      <!-- 黑方被吃棋子 -->
-      <div class="captured-pieces black-captured">
-        <h4>黑方失子</h4>
-        <div class="pieces-list">
-          <div v-for="(piece, index) in capturedPieces.black" :key="'black-' + index" class="captured-piece" :style="getSkinStyle(currentSkin, 'black')">
-            {{ piece.name }}
-          </div>
-          <div v-if="capturedPieces.black.length === 0" class="no-pieces">无</div>
-        </div>
-      </div>
+    </div>
+  </div>
+  
+  <!-- 自定义模态框 -->
+  <div v-if="showModal" class="custom-modal" @click="closeModal">
+    <div class="modal-content" @click.stop>
+      <h3 class="modal-title">{{ modalTitle }}</h3>
+      <p class="modal-message">{{ modalMessage }}</p>
+      <button @click="closeModal" class="modal-btn">确定</button>
     </div>
   </div>
 </template>
@@ -263,6 +275,11 @@ const moveHistory = ref([])
 const gameStatus = ref("游戏进行中")
 const gameStarted = ref(false)
 const currentSkin = ref("classic")
+
+// 模态框状态
+const showModal = ref(false)
+const modalTitle = ref("")
+const modalMessage = ref("")
 
 // 被吃掉的棋子
 const capturedPieces = ref({
@@ -444,6 +461,20 @@ const changePlayerColor = (color) => {
 }
 
 // 开始游戏
+// 显示自定义模态框
+const showCustomModal = (title, message) => {
+  modalTitle.value = title;
+  modalMessage.value = message;
+  showModal.value = true;
+}
+
+// 关闭模态框
+const closeModal = () => {
+  showModal.value = false;
+  modalTitle.value = "";
+  modalMessage.value = "";
+}
+
 const startGame = () => {
   if (gameMode.value === "pvc") {
     // 根据玩家选择的颜色设置初始玩家
@@ -495,12 +526,13 @@ const isValidMovePosition = (row, col) => {
 
 // 处理格子点击
 const handleCellClick = (row, col) => {
-  // 在人机对战模式下，判断是否是玩家的回合
-  if (gameMode.value === "pvc" && currentPlayer.value !== playerColor.value) return
   if (isAiThinking.value) return
 
   // 确保游戏已开始
   if (!gameStarted.value) return
+    
+  // 在人机对战模式下，判断是否是玩家的回合
+  if (gameMode.value === "pvc" && currentPlayer.value !== playerColor.value) return
 
   const piece = chessBoard.getPiece(row, col)
 
@@ -542,7 +574,26 @@ const movePiece = (fromRow, fromCol, toRow, toCol) => {
     capturedPiece,
   })
 
-  if (capturedPiece && capturedPiece.type === "king") {
+  // 检查将帅是否直接对面（白脸将规则）
+  if (chessRules.isKingsDirectlyFacing()) {
+    // 将帅直接对面，当前移动方失败
+    const loser = currentPlayer.value === "red" ? "红方" : "黑方";
+    const winner = currentPlayer.value === "red" ? "黑方" : "红方";
+    const killType = "白脸将";
+    
+    checkmateEffect.value = {
+      show: true,
+      pieceName: piece.name,
+      killType: killType,
+      color: piece.color === "red" ? "black" : "red", // 显示获胜方的颜色
+    }
+
+    gameStatus.value = `${winner}获胜！${killType}`;
+
+    setTimeout(() => {
+      showCustomModal('游戏结束', gameStatus.value);
+    }, 2000);
+  } else if (capturedPiece && capturedPiece.type === "king") {
     const killType = chessRules.analyzeCheckmateType(piece, { row: toRow, col: toCol }, { row: toRow, col: toCol })
 
     checkmateEffect.value = {
@@ -555,7 +606,7 @@ const movePiece = (fromRow, fromCol, toRow, toCol) => {
     gameStatus.value = `${currentPlayer.value === "red" ? "红方" : "黑方"}获胜！${killType}`
 
     setTimeout(() => {
-      alert(gameStatus.value)
+      showCustomModal('游戏结束', gameStatus.value);
     }, 2000)
   } else {
     currentPlayer.value = currentPlayer.value === "red" ? "black" : "red"
@@ -565,13 +616,20 @@ const movePiece = (fromRow, fromCol, toRow, toCol) => {
 
     if (checkmateResult.isCheckmate) {
       const kingPos = chessBoard.findKing(opponentColor)
-      const killType = chessRules.analyzeCheckmateType(checkmateResult.killerPiece, checkmateResult.killerPos, kingPos)
+      
+      // 区分将死和困毙
+      let killType = "";
+      if (checkmateResult.checkmateType === '困毙') {
+        killType = "困毙";
+      } else {
+        killType = chessRules.analyzeCheckmateType(checkmateResult.killerPiece, checkmateResult.killerPos, kingPos)
+      }
 
       checkmateEffect.value = {
         show: true,
-        pieceName: checkmateResult.killerPiece.name,
+        pieceName: checkmateResult.killerPiece ? checkmateResult.killerPiece.name : '无',
         killType: killType,
-        color: checkmateResult.killerPiece.color,
+        color: checkmateResult.killerPiece ? checkmateResult.killerPiece.color : (opponentColor === 'red' ? 'black' : 'red'),
       }
 
       checkWarning.value = { isCheck: false, checkedColor: "" }
@@ -580,7 +638,7 @@ const movePiece = (fromRow, fromCol, toRow, toCol) => {
       gameStatus.value = `${winner}获胜！${killType}`
 
       setTimeout(() => {
-        alert(gameStatus.value)
+        showCustomModal('游戏结束', gameStatus.value);
       }, 2000)
     } else {
       const checkResult = chessRules.isInCheck(opponentColor)

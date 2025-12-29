@@ -168,13 +168,47 @@ export class ChessRules {
       if (piece.color === COLORS.RED) {
         if (newRow >= 7 && newRow <= 9 && newCol >= 3 && newCol <= 5) {
           if (!board[newRow][newCol] || board[newRow][newCol].color !== piece.color) {
-            moves.push({ row: newRow, col: newCol })
+            // 检查移动后是否会导致将帅直接对面
+            const originalPiece = board[row][col];
+            const targetPiece = board[newRow][newCol];
+            
+            // 模拟移动
+            board[newRow][newCol] = originalPiece;
+            board[row][col] = null;
+            
+            // 检查移动后是否将帅直接对面
+            const wouldBeDirectlyFacing = this.isKingsDirectlyFacing();
+            
+            // 恢复原位置
+            board[row][col] = originalPiece;
+            board[newRow][newCol] = targetPiece;
+            
+            if (!wouldBeDirectlyFacing) {
+              moves.push({ row: newRow, col: newCol });
+            }
           }
         }
       } else {
         if (newRow >= 0 && newRow <= 2 && newCol >= 3 && newCol <= 5) {
           if (!board[newRow][newCol] || board[newRow][newCol].color !== piece.color) {
-            moves.push({ row: newRow, col: newCol })
+            // 检查移动后是否会导致将帅直接对面
+            const originalPiece = board[row][col];
+            const targetPiece = board[newRow][newCol];
+            
+            // 模拟移动
+            board[newRow][newCol] = originalPiece;
+            board[row][col] = null;
+            
+            // 检查移动后是否将帅直接对面
+            const wouldBeDirectlyFacing = this.isKingsDirectlyFacing();
+            
+            // 恢复原位置
+            board[row][col] = originalPiece;
+            board[newRow][newCol] = targetPiece;
+            
+            if (!wouldBeDirectlyFacing) {
+              moves.push({ row: newRow, col: newCol });
+            }
           }
         }
       }
@@ -308,10 +342,45 @@ export class ChessRules {
     return this.filterMovesToEscapeCheck(piece.color, row, col, moves)
   }
 
+  // 检查将帅是否直接对面（将帅之间没有其他棋子）
+  isKingsDirectlyFacing() {
+    const redKingPos = this.chessBoard.findKing(COLORS.RED)
+    const blackKingPos = this.chessBoard.findKing(COLORS.BLACK)
+    
+    if (!redKingPos || !blackKingPos) return false
+    
+    // 检查是否在同一列
+    if (redKingPos.col !== blackKingPos.col) return false
+    
+    // 检查两将之间是否有其他棋子
+    const startRow = Math.min(redKingPos.row, blackKingPos.row)
+    const endRow = Math.max(redKingPos.row, blackKingPos.row)
+    
+    for (let row = startRow + 1; row < endRow; row++) {
+      if (this.chessBoard.getPiece(row, redKingPos.col)) {
+        // 如果两将之间有棋子，则不直接对面
+        return false
+      }
+    }
+    
+    // 两将之间没有棋子，直接对面
+    return true
+  }
+  
   // 检查指定颜色是否被将军
   isInCheck(color) {
     const kingPos = this.chessBoard.findKing(color)
     if (!kingPos) return { isCheck: false }
+    
+    // 检查将帅是否直接对面
+    if (this.isKingsDirectlyFacing()) {
+      // 如果将帅直接对面，当前移动方的将/帅被将军
+      const opponentColor = color === COLORS.RED ? COLORS.BLACK : COLORS.RED
+      const opponentKingPos = this.chessBoard.findKing(opponentColor)
+      if (opponentKingPos) {
+        return { isCheck: true, attackerPiece: { type: PIECE_TYPES.KING, color: opponentColor }, attackerPos: opponentKingPos }
+      }
+    }
     
     const opponentColor = color === COLORS.RED ? COLORS.BLACK : COLORS.RED
     const board = this.chessBoard.getBoard()
@@ -362,10 +431,12 @@ export class ChessRules {
   // 检查是否被将死（无法解除将军）
   isCheckmate(color) {
     const checkResult = this.isInCheck(color)
-    if (!checkResult.isCheck) return { isCheckmate: false }
     
-    // 尝试所有可能的移动，看是否能解除将军
+    // 尝试所有可能的移动
     const allMoves = this.getAllPossibleMoves(color)
+    
+    // 检查是否有任何合法移动
+    let hasValidMove = false
     
     for (const move of allMoves) {
       // 模拟移动
@@ -373,7 +444,7 @@ export class ChessRules {
       this.chessBoard.setPiece(move.toRow, move.toCol, move.piece)
       this.chessBoard.setPiece(move.fromRow, move.fromCol, null)
       
-      // 检查是否还在将军状态
+      // 检查移动后是否还在将军状态
       const stillInCheck = this.isInCheck(color).isCheck
       
       // 恢复棋局
@@ -381,15 +452,33 @@ export class ChessRules {
       this.chessBoard.setPiece(move.toRow, move.toCol, originalPiece)
       
       if (!stillInCheck) {
-        return { isCheckmate: false }
+        hasValidMove = true
+        break
       }
     }
     
-    return { 
-      isCheckmate: true, 
-      killerPiece: checkResult.attackerPiece,
-      killerPos: checkResult.attackerPos
+    // 如果没有合法移动
+    if (!hasValidMove) {
+      if (checkResult.isCheck) {
+        // 被将军且无合法移动 -> 将死
+        return { 
+          isCheckmate: true, 
+          killerPiece: checkResult.attackerPiece,
+          killerPos: checkResult.attackerPos
+        }
+      } else {
+        // 未被将军但无合法移动 -> 困毙
+        return { 
+          isCheckmate: true, 
+          killerPiece: null,
+          killerPos: null,
+          checkmateType: '困毙'  // 标记为困毙
+        }
+      }
     }
+    
+    // 有合法移动，不是将死
+    return { isCheckmate: false }
   }
 
   // 分析绝杀类型
