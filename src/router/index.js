@@ -65,6 +65,15 @@ const routes = [
       keepAlive: true
     }
   },
+  {
+    path: '/game',
+    name: 'WalkingGame',
+    component: () => import('@/views/game/WalkingGame.vue'),
+    meta: {
+      title: '3D 行走游戏',
+      keepAlive: false
+    }
+  },
   // 404页面
   {
     path: '/:pathMatch(.*)*',

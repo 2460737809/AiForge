@@ -110,7 +110,15 @@ const features = ref([
     clickable: true
   },
   {
-    id: 9,
+    id: 10,
+    icon: '🎮',
+    title: '3D 行走游戏',
+    description: 'Three.js 3D 世界，键盘控制角色自由行走',
+    link: '/game',
+    clickable: true
+  },
+  {
+    id: 11,
     icon: '🌐',
     title: '国际化',
     description: '内置i18n支持，轻松实现多语言切换'
