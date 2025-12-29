@@ -476,6 +476,8 @@ const performMeleeAttack = (weapon: Weapon) => {
       const angleDiff = Math.abs(angleToEnemy - cameraYaw)
       if (angleDiff < Math.PI / 2 || angleDiff > Math.PI * 1.5) {
         enemy.health -= weapon.damage
+        enemy.isAggressive = true
+        enemy.lastHitTime = clock.getElapsedTime()
         hitEffects.push(createHitEffect(scene, enemy.mesh.position.clone()))
       }
     }
@@ -544,6 +546,8 @@ const updateProjectiles = (delta: number) => {
 
       if (distance < 1.5) {
         enemy.health -= proj.damage
+        enemy.isAggressive = true
+        enemy.lastHitTime = clock.getElapsedTime()
         hitEffects.push(createHitEffect(scene, enemy.mesh.position.clone()))
         scene.remove(proj.mesh)
         projectiles.splice(i, 1)
@@ -780,6 +784,10 @@ onMounted(() => {
     createObstacles()
     createTrees()
     enemies = createEnemies(ENEMY_TYPES, scene)
+    console.log("Enemies created:", enemies.length)
+    for (const enemy of enemies) {
+      console.log(`${enemy.name} at position:`, enemy.mesh.position)
+    }
     setupControls()
     animate()
   } catch (error) {

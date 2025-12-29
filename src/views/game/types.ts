@@ -29,6 +29,8 @@ export interface Enemy {
   attackCooldown: number
   lastAttackTime: number
   state: "idle" | "chasing" | "attacking" | "fleeing"
+  lastHitTime: number
+  isAggressive: boolean
 }
 
 export interface Projectile {

@@ -89,6 +89,8 @@ export function createEnemy(type: EnemyTypeConfig, id: number, scene: THREE.Scen
     attackCooldown: 1.5,
     lastAttackTime: 0,
     state: "idle",
+    lastHitTime: 0,
+    isAggressive: false,
   }
 }
 
@@ -105,7 +107,13 @@ export function updateEnemyAI(
   const now = clock.getElapsedTime()
   const distanceToPlayer = enemy.mesh.position.distanceTo(player.position)
 
-  if (distanceToPlayer < 30) {
+  if (enemy.isAggressive) {
+    if (now - enemy.lastHitTime > 8) {
+      enemy.isAggressive = false
+      enemy.state = "idle"
+      return
+    }
+
     if (distanceToPlayer < enemy.attackRange) {
       enemy.state = "attacking"
 
@@ -118,7 +126,7 @@ export function updateEnemyAI(
           gameOver.value = true
         }
       }
-    } else {
+    } else if (distanceToPlayer < 25) {
       enemy.state = "chasing"
 
       const direction = new THREE.Vector3()
@@ -131,6 +139,9 @@ export function updateEnemyAI(
       enemy.mesh.position.z = newZ
 
       enemy.mesh.lookAt(player.position.x, player.position.y, player.position.z)
+    } else {
+      enemy.isAggressive = false
+      enemy.state = "idle"
     }
   } else {
     enemy.state = "idle"
