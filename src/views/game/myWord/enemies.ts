@@ -66,14 +66,14 @@ export function createEnemy(type: EnemyTypeConfig, id: number, scene: THREE.Scen
     }
   }
 
-  const x = (Math.random() - 0.5) * 80
-  const z = (Math.random() - 0.5) * 80
-
-  if (Math.abs(x) < 10 && Math.abs(z) < 10) {
-    group.position.set(x + 15, 0, z + 15)
-  } else {
-    group.position.set(x, 0, z)
-  }
+  // 确保敌人生成在玩家附近可见区域（距离玩家10-40单位）
+  const angle = Math.random() * Math.PI * 2
+  const distance = 10 + Math.random() * 30 // 距离玩家10-40单位
+  const x = Math.cos(angle) * distance
+  const z = Math.sin(angle) * distance
+  
+  // 敌人直接站在地面上（y=0），因为body的position.y已经设置为size * 0.5
+  group.position.set(x, 0, z)
 
   scene.add(group)
 

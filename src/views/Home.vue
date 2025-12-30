@@ -118,6 +118,14 @@ const features = ref([
     clickable: true
   },
   {
+    id: 12,
+    icon: '🏎️',
+    title: '赛车游戏',
+    description: '无限道路赛车，WASD 控制，程序化生成场景',
+    link: '/racing',
+    clickable: true
+  },
+  {
     id: 11,
     icon: '🌐',
     title: '国际化',

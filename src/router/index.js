@@ -68,9 +68,18 @@ const routes = [
   {
     path: '/game',
     name: 'WalkingGame',
-    component: () => import('@/views/game/WalkingGame.vue'),
+    component: () => import('@/views/game/myWord/WalkingGame.vue'),
     meta: {
       title: '3D 行走游戏',
+      keepAlive: false
+    }
+  },
+  {
+    path: '/racing',
+    name: 'RacingGame',
+    component: () => import('@/views/game/racing/RacingGame.vue'),
+    meta: {
+      title: '赛车游戏',
       keepAlive: false
     }
   },

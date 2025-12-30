@@ -26,7 +26,7 @@
           <span class="key">左键点击</span> 锁定视角
         </div>
         <div class="key-item">
-          <span class="key">右键</span> 攻击
+          <span class="key">左键/右键</span> 攻击
         </div>
         <div class="key-item">
           <span class="key">1-5</span> 切换武器
@@ -145,7 +145,7 @@ let trees: THREE.Group[] = []
 let playerWeapon: THREE.Group | null = null
 
 let cameraYaw = 0
-let cameraPitch = 0.5
+let cameraPitch = 0.2 // 初始俯仰角，稍微向下看
 
 let velocityY = 0
 let isJumping = ref(false)
@@ -160,8 +160,9 @@ const initScene = () => {
   scene.fog = new THREE.Fog(0x87ceeb, 50, 100)
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000)
-  camera.position.set(0, 10, 15)
-  camera.lookAt(0, 0, 0)
+  // 初始相机位置：在玩家后方，过肩视角
+  camera.position.set(0, 2, 4)
+  camera.lookAt(0, 1.5, 0)
 
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setSize(window.innerWidth, window.innerHeight)
@@ -453,10 +454,17 @@ const performAttack = () => {
 const performMeleeAttack = (weapon: Weapon) => {
   if (!player || !player.position) return
 
+  // 攻击方向：基于相机朝向
+  const attackDirection = new THREE.Vector3(
+    Math.sin(cameraYaw),
+    0,
+    Math.cos(cameraYaw)
+  ).normalize()
+
   const attackPos = new THREE.Vector3(
-    player.position.x + Math.sin(cameraYaw) * weapon.range,
+    player.position.x + attackDirection.x * weapon.range,
     player.position.y + 1,
-    player.position.z + Math.cos(cameraYaw) * weapon.range
+    player.position.z + attackDirection.z * weapon.range
   )
 
   const trailStart = player.position.clone()
@@ -465,20 +473,34 @@ const performMeleeAttack = (weapon: Weapon) => {
   const trail = createMeleeAttackTrail(scene, trailStart, trailEnd, weapon.id)
   attackTrails.push(trail)
 
+  // 改进攻击检测：使用扇形检测区域
   for (const enemy of enemies) {
     if (enemy.health <= 0) continue
 
-    const enemyPos = new THREE.Vector3(enemy.mesh.position.x, enemy.mesh.position.y + enemy.maxHealth * 0.5, enemy.mesh.position.z)
-    const distance = attackPos.distanceTo(enemyPos)
-
-    if (distance < weapon.range + 1) {
-      const angleToEnemy = Math.atan2(enemy.mesh.position.x - player.position.x, enemy.mesh.position.z - player.position.z)
-      const angleDiff = Math.abs(angleToEnemy - cameraYaw)
-      if (angleDiff < Math.PI / 2 || angleDiff > Math.PI * 1.5) {
+    const enemyPos = new THREE.Vector3(
+      enemy.mesh.position.x,
+      enemy.mesh.position.y + enemy.maxHealth * 0.5,
+      enemy.mesh.position.z
+    )
+    
+    // 计算敌人到玩家的距离和方向
+    const toEnemy = new THREE.Vector3().subVectors(enemyPos, player.position)
+    const distance = toEnemy.length()
+    
+    // 检查距离
+    if (distance < weapon.range + 1.5) {
+      // 检查角度（攻击扇形范围：前方120度）
+      toEnemy.normalize()
+      const dot = attackDirection.dot(toEnemy)
+      const angle = Math.acos(Math.max(-1, Math.min(1, dot)))
+      
+      // 如果敌人在攻击范围内（60度扇形）
+      if (angle < Math.PI / 3) {
         enemy.health -= weapon.damage
         enemy.isAggressive = true
         enemy.lastHitTime = clock.getElapsedTime()
         hitEffects.push(createHitEffect(scene, enemy.mesh.position.clone()))
+        console.log(`击中 ${enemy.name}，剩余血量: ${enemy.health}`)
       }
     }
   }
@@ -592,7 +614,7 @@ const restartGame = () => {
     player.position.set(0, 0, 0)
   }
   cameraYaw = 0
-  cameraPitch = 0.5
+  cameraPitch = 0.2
 
   enemies = createEnemies(ENEMY_TYPES, scene)
   switchWeapon(0)
@@ -626,10 +648,15 @@ const setupControls = () => {
 
   gameCanvas.value?.addEventListener("mousedown", (e: MouseEvent) => {
     if (e.button === 0) {
+      // 左键：如果未启用鼠标控制，则启用；如果已启用，则攻击
       if (!isMouseControlEnabled.value && !gameOver.value && !victory.value) {
         gameCanvas.value?.requestPointerLock()
+      } else if (isMouseControlEnabled.value && !gameOver.value && !victory.value) {
+        // 左键攻击（更符合游戏习惯）
+        performAttack()
       }
     } else if (e.button === 2) {
+      // 右键也可以攻击
       if (isMouseControlEnabled.value && !gameOver.value && !victory.value) {
         performAttack()
       }
@@ -644,7 +671,8 @@ const setupControls = () => {
     if (isMouseControlEnabled.value && document.pointerLockElement === gameCanvas.value) {
       cameraYaw -= e.movementX * GAME_CONSTANTS.MOUSE_SENSITIVITY
       cameraPitch -= e.movementY * GAME_CONSTANTS.MOUSE_SENSITIVITY
-      cameraPitch = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, cameraPitch))
+      // 限制俯仰角范围：-30度到60度（更符合过肩视角）
+      cameraPitch = Math.max(-Math.PI / 6, Math.min(Math.PI / 3, cameraPitch))
     }
   })
 
@@ -727,18 +755,27 @@ const updatePlayer = (delta: number) => {
 const updateCamera = () => {
   if (!player || !player.position) return
 
-  const cameraDistance = 12
-  const cameraHeight = 8
+  // 黑神话悟空风格的过肩视角
+  // 相机在角色后方，距离较近，高度在肩膀位置
+  const cameraDistance = 4 // 更近的距离，类似过肩视角
+  const cameraHeight = 1.5 // 相机高度在角色肩膀位置（约1.5米高）
+  const cameraOffset = 0.3 // 轻微的右侧偏移，避免遮挡
 
-  const targetCameraX = player.position.x + Math.sin(cameraYaw) * cameraDistance * Math.cos(cameraPitch)
-  const targetCameraZ = player.position.z + Math.cos(cameraYaw) * cameraDistance * Math.cos(cameraPitch)
-  const targetCameraY = player.position.y + cameraHeight + Math.sin(cameraPitch) * 5
+  // 计算相机目标位置（在角色后方）
+  const targetCameraX = player.position.x - Math.sin(cameraYaw) * cameraDistance + Math.cos(cameraYaw) * cameraOffset
+  const targetCameraZ = player.position.z - Math.cos(cameraYaw) * cameraDistance - Math.sin(cameraYaw) * cameraOffset
+  const targetCameraY = player.position.y + cameraHeight + Math.sin(cameraPitch) * 2
 
-  camera.position.x += (targetCameraX - camera.position.x) * GAME_CONSTANTS.CAMERA_SMOOTHING
-  camera.position.y += (targetCameraY - camera.position.y) * GAME_CONSTANTS.CAMERA_SMOOTHING
-  camera.position.z += (targetCameraZ - camera.position.z) * GAME_CONSTANTS.CAMERA_SMOOTHING
+  // 平滑移动相机
+  camera.position.x += (targetCameraX - camera.position.x) * GAME_CONSTANTS.CAMERA_SMOOTHING * 2
+  camera.position.y += (targetCameraY - camera.position.y) * GAME_CONSTANTS.CAMERA_SMOOTHING * 2
+  camera.position.z += (targetCameraZ - camera.position.z) * GAME_CONSTANTS.CAMERA_SMOOTHING * 2
 
-  camera.lookAt(player.position.x, player.position.y + 1, player.position.z)
+  // 相机看向角色前方（稍微向上看）
+  const lookAtHeight = player.position.y + 1.2 + Math.sin(cameraPitch) * 1
+  const lookAtX = player.position.x + Math.sin(cameraYaw) * 5
+  const lookAtZ = player.position.z + Math.cos(cameraYaw) * 5
+  camera.lookAt(lookAtX, lookAtHeight, lookAtZ)
 }
 
 const updateEnemies = (delta: number) => {
