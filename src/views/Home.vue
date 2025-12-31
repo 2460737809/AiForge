@@ -147,6 +147,14 @@ const features = ref([
     title: "国际化",
     description: "内置i18n支持，轻松实现多语言切换",
   },
+  {
+    id: 13,
+    icon: "⚙️",
+    title: "后台管理",
+    description: "后台管理系统，用户管理、角色权限、菜单管理等功能",
+    link: "/admin",
+    clickable: true,
+  },
 ]);
 
 onMounted(() => {

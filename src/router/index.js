@@ -83,6 +83,69 @@ const routes = [
       keepAlive: false
     }
   },
+  // 后台管理系统路由
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    meta: {
+      title: '后台管理',
+      requiresAuth: true
+    },
+    children: [
+      {
+        path: '',
+        redirect: '/admin/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/Dashboard.vue'),
+        meta: {
+          title: '控制台'
+        }
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/Users.vue'),
+        meta: {
+          title: '用户管理'
+        }
+      },
+      {
+        path: 'roles',
+        name: 'AdminRoles',
+        component: () => import('@/views/admin/Roles.vue'),
+        meta: {
+          title: '角色管理'
+        }
+      },
+      {
+        path: 'menus',
+        name: 'AdminMenus',
+        component: () => import('@/views/admin/Menus.vue'),
+        meta: {
+          title: '菜单管理'
+        }
+      },
+      {
+        path: 'logs',
+        name: 'AdminLogs',
+        component: () => import('@/views/admin/Logs.vue'),
+        meta: {
+          title: '操作日志'
+        }
+      },
+      {
+        path: 'settings',
+        name: 'AdminSettings',
+        component: () => import('@/views/admin/Settings.vue'),
+        meta: {
+          title: '系统设置'
+        }
+      }
+    ]
+  },
   // 404页面
   {
     path: '/:pathMatch(.*)*',
