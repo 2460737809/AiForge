@@ -186,7 +186,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 import Button from '@/components/ui/button/Button.vue'
@@ -202,6 +202,7 @@ import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
 import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import { getUserList, createUser, updateUser, deleteUser as deleteUserApi } from '@/api/admin/users'
 import {
   Search,
   RefreshCw,
@@ -216,6 +217,7 @@ const dialogOpen = ref(false)
 const deleteDialogOpen = ref(false)
 const isEdit = ref(false)
 const deleteUser = ref(null)
+const loading = ref(false)
 
 const form = ref({
   id: null,
@@ -225,55 +227,34 @@ const form = ref({
   status: '正常'
 })
 
-const users = ref([
-  {
-    id: 1,
-    username: '张三',
-    email: 'zhangsan@example.com',
-    role: '管理员',
-    status: '正常',
-    createdAt: '2024-01-10 10:00:00'
-  },
-  {
-    id: 2,
-    username: '李四',
-    email: 'lisi@example.com',
-    role: '普通用户',
-    status: '正常',
-    createdAt: '2024-01-11 14:30:00'
-  },
-  {
-    id: 3,
-    username: '王五',
-    email: 'wangwu@example.com',
-    role: '普通用户',
-    status: '禁用',
-    createdAt: '2024-01-12 09:15:00'
-  },
-  {
-    id: 4,
-    username: '赵六',
-    email: 'zhaoliu@example.com',
-    role: '普通用户',
-    status: '正常',
-    createdAt: '2024-01-13 16:45:00'
-  },
-  {
-    id: 5,
-    username: '钱七',
-    email: 'qianqi@example.com',
-    role: '管理员',
-    status: '正常',
-    createdAt: '2024-01-14 11:20:00'
+const users = ref([])
+
+// 加载用户列表
+async function loadUsers() {
+  try {
+    loading.value = true
+    const res = await getUserList()
+    if (res.code === 200) {
+      users.value = res.data
+    }
+  } catch (error) {
+    console.error('加载用户列表失败:', error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 初始化加载
+onMounted(() => {
+  loadUsers()
+})
 
 function handleSearch() {
   console.log('搜索:', searchText.value)
 }
 
 function handleRefresh() {
-  console.log('刷新用户列表')
+  loadUsers()
 }
 
 function handleAdd() {
@@ -305,41 +286,51 @@ function handleDelete(user) {
   deleteDialogOpen.value = true
 }
 
-function handleSubmit() {
-  if (isEdit.value) {
-    const index = users.value.findIndex(u => u.id === form.value.id)
-    if (index !== -1) {
-      users.value[index] = {
-        ...users.value[index],
+async function handleSubmit() {
+  try {
+    if (isEdit.value) {
+      const res = await updateUser(form.value.id, {
         username: form.value.username,
         email: form.value.email,
         role: form.value.role,
         status: form.value.status
+      })
+      if (res.code === 200) {
+        const index = users.value.findIndex(u => u.id === form.value.id)
+        if (index !== -1) {
+          users.value[index] = res.data
+        }
+      }
+    } else {
+      const res = await createUser({
+        username: form.value.username,
+        email: form.value.email,
+        role: form.value.role,
+        status: form.value.status
+      })
+      if (res.code === 200) {
+        users.value.push(res.data)
       }
     }
-  } else {
-    const newId = Math.max(...users.value.map(u => u.id)) + 1
-    const now = new Date()
-    const createdAt = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
-    
-    users.value.push({
-      id: newId,
-      username: form.value.username,
-      email: form.value.email,
-      role: form.value.role,
-      status: form.value.status,
-      createdAt
-    })
+    dialogOpen.value = false
+  } catch (error) {
+    console.error('操作失败:', error)
   }
-  dialogOpen.value = false
 }
 
-function confirmDelete() {
-  const index = users.value.findIndex(u => u.id === deleteUser.value.id)
-  if (index !== -1) {
-    users.value.splice(index, 1)
+async function confirmDelete() {
+  try {
+    const res = await deleteUserApi(deleteUser.value.id)
+    if (res.code === 200) {
+      const index = users.value.findIndex(u => u.id === deleteUser.value.id)
+      if (index !== -1) {
+        users.value.splice(index, 1)
+      }
+    }
+    deleteDialogOpen.value = false
+    deleteUser.value = null
+  } catch (error) {
+    console.error('删除失败:', error)
   }
-  deleteDialogOpen.value = false
-  deleteUser.value = null
 }
 </script>

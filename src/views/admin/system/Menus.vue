@@ -180,7 +180,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 import Button from '@/components/ui/button/Button.vue'
@@ -191,6 +191,7 @@ import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
 import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import { getMenuList, createMenu, updateMenu, deleteMenu as deleteMenuApi } from '@/api/admin/menus'
 import {
   ChevronDown,
   ChevronRight,
@@ -218,7 +219,7 @@ const dialogOpen = ref(false)
 const deleteDialogOpen = ref(false)
 const isEdit = ref(false)
 const deleteMenu = ref(null)
-const nextId = ref(32)
+const loading = ref(false)
 
 const form = ref({
   id: null,
@@ -229,71 +230,33 @@ const form = ref({
   iconName: 'LayoutDashboard'
 })
 
-const menus = ref([
-  {
-    id: 1,
-    name: '控制台',
-    path: '/admin/dashboard',
-    type: '菜单',
-    icon: LayoutDashboard,
-    expanded: true,
-    children: []
-  },
-  {
-    id: 2,
-    name: '系统管理',
-    path: '',
-    type: '目录',
-    icon: Settings,
-    expanded: true,
-    children: [
-      {
-        id: 21,
-        name: '用户管理',
-        path: '/admin/system/users',
-        type: '菜单',
-        icon: Users,
-        expanded: false
-      },
-      {
-        id: 22,
-        name: '角色管理',
-        path: '/admin/system/roles',
-        type: '菜单',
-        icon: Shield,
-        expanded: false
-      },
-      {
-        id: 23,
-        name: '菜单管理',
-        path: '/admin/system/menus',
-        type: '菜单',
-        icon: Settings,
-        expanded: false
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: '日志管理',
-    path: '',
-    type: '目录',
-    icon: FileText,
-    expanded: false,
-    children: [
-      {
-        id: 31,
-        name: '操作日志',
-        path: '/admin/system/logs',
-        type: '菜单',
-        icon: FileText,
-        expanded: false
-      }
-    ]
-  }
-])
+const menus = ref([])
 
 const rootMenus = computed(() => menus.value)
+
+// 加载菜单列表
+async function loadMenus() {
+  try {
+    loading.value = true
+    const res = await getMenuList()
+    if (res.code === 200) {
+      menus.value = res.data.map(menu => ({
+        ...menu,
+        icon: iconMap[menu.icon] || LayoutDashboard,
+        expanded: menu.children && menu.children.length > 0
+      }))
+    }
+  } catch (error) {
+    console.error('加载菜单列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 初始化加载
+onMounted(() => {
+  loadMenus()
+})
 
 function toggleExpand(menu) {
   menu.expanded = !menu.expanded
@@ -351,64 +314,43 @@ function handleDelete(menu) {
   deleteDialogOpen.value = true
 }
 
-function handleSubmit() {
-  const newMenu = {
-    id: isEdit.value ? form.value.id : nextId.value++,
-    name: form.value.name,
-    type: form.value.type,
-    path: form.value.path,
-    icon: iconMap[form.value.iconName],
-    expanded: false
-  }
+async function handleSubmit() {
+  try {
+    const data = {
+      name: form.value.name,
+      type: form.value.type,
+      path: form.value.path,
+      icon: form.value.iconName,
+      parentId: form.value.parentId
+    }
 
-  if (isEdit.value) {
-    const parentId = form.value.parentId
-    if (parentId) {
-      const parent = menus.value.find(m => m.id === parentId)
-      const childIndex = parent.children.findIndex(c => c.id === form.value.id)
-      if (childIndex !== -1) {
-        parent.children[childIndex] = newMenu
+    if (isEdit.value) {
+      const res = await updateMenu(form.value.id, data)
+      if (res.code === 200) {
+        await loadMenus()
       }
     } else {
-      const index = menus.value.findIndex(m => m.id === form.value.id)
-      if (index !== -1) {
-        const children = menus.value[index].children || []
-        menus.value[index] = { ...newMenu, children }
+      const res = await createMenu(data)
+      if (res.code === 200) {
+        await loadMenus()
       }
     }
-  } else {
-    if (form.value.parentId) {
-      const parent = menus.value.find(m => m.id === form.value.parentId)
-      if (parent) {
-        if (!parent.children) {
-          parent.children = []
-        }
-        parent.children.push(newMenu)
-      }
-    } else {
-      menus.value.push({ ...newMenu, children: [] })
-    }
+    dialogOpen.value = false
+  } catch (error) {
+    console.error('操作失败:', error)
   }
-  dialogOpen.value = false
 }
 
-function confirmDelete() {
-  const parentId = menus.value.find(m => m.children?.some(c => c.id === deleteMenu.value.id))?.id
-
-  if (parentId) {
-    const parent = menus.value.find(m => m.id === parentId)
-    const childIndex = parent.children.findIndex(c => c.id === deleteMenu.value.id)
-    if (childIndex !== -1) {
-      parent.children.splice(childIndex, 1)
+async function confirmDelete() {
+  try {
+    const res = await deleteMenuApi(deleteMenu.value.id)
+    if (res.code === 200) {
+      await loadMenus()
     }
-  } else {
-    const index = menus.value.findIndex(m => m.id === deleteMenu.value.id)
-    if (index !== -1) {
-      menus.value.splice(index, 1)
-    }
+    deleteDialogOpen.value = false
+    deleteMenu.value = null
+  } catch (error) {
+    console.error('删除失败:', error)
   }
-
-  deleteDialogOpen.value = false
-  deleteMenu.value = null
 }
 </script>

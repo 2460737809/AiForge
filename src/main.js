@@ -5,6 +5,10 @@ import App from './App.vue'
 import './assets/styles/main.scss'
 import './assets/styles/tailwind.css'
 
+// 启动 MSW Mock Server
+import { startMockServer } from './mocks/browser'
+startMockServer()
+
 const app = createApp(App)
 
 // 全局错误处理

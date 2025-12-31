@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import Card from '@/components/ui/card/Card.vue'
 import CardContent from '@/components/ui/card/CardContent.vue'
 import CardHeader from '@/components/ui/card/CardHeader.vue'
@@ -135,6 +135,7 @@ import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
 import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import { getRoleList, createRole, updateRole, deleteRole as deleteRoleApi } from '@/api/admin/roles'
 import { Plus, Edit, Trash2, Users } from 'lucide-vue-next'
 
 const allPermissions = [
@@ -154,6 +155,7 @@ const dialogOpen = ref(false)
 const deleteDialogOpen = ref(false)
 const isEdit = ref(false)
 const deleteRole = ref(null)
+const loading = ref(false)
 
 const form = ref({
   id: null,
@@ -162,36 +164,27 @@ const form = ref({
   permissions: []
 })
 
-const roles = ref([
-  {
-    id: 1,
-    name: '超级管理员',
-    description: '拥有系统所有权限',
-    permissions: ['系统管理', '用户管理', '角色管理', '菜单管理', '日志查看', '系统配置'],
-    userCount: 2
-  },
-  {
-    id: 2,
-    name: '管理员',
-    description: '拥有部分管理权限',
-    permissions: ['用户管理', '角色查看', '日志查看'],
-    userCount: 5
-  },
-  {
-    id: 3,
-    name: '编辑',
-    description: '内容编辑权限',
-    permissions: ['内容编辑', '内容发布'],
-    userCount: 10
-  },
-  {
-    id: 4,
-    name: '普通用户',
-    description: '基础用户权限',
-    permissions: ['内容查看'],
-    userCount: 100
+const roles = ref([])
+
+// 加载角色列表
+async function loadRoles() {
+  try {
+    loading.value = true
+    const res = await getRoleList()
+    if (res.code === 200) {
+      roles.value = res.data
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+  } finally {
+    loading.value = false
   }
-])
+}
+
+// 初始化加载
+onMounted(() => {
+  loadRoles()
+})
 
 function handleAdd() {
   isEdit.value = false
@@ -220,36 +213,49 @@ function handleDelete(role) {
   deleteDialogOpen.value = true
 }
 
-function handleSubmit() {
-  if (isEdit.value) {
-    const index = roles.value.findIndex(r => r.id === form.value.id)
-    if (index !== -1) {
-      roles.value[index] = {
-        ...roles.value[index],
+async function handleSubmit() {
+  try {
+    if (isEdit.value) {
+      const res = await updateRole(form.value.id, {
         name: form.value.name,
         description: form.value.description,
-        permissions: [...form.value.permissions]
+        permissions: form.value.permissions
+      })
+      if (res.code === 200) {
+        const index = roles.value.findIndex(r => r.id === form.value.id)
+        if (index !== -1) {
+          roles.value[index] = res.data
+        }
+      }
+    } else {
+      const res = await createRole({
+        name: form.value.name,
+        description: form.value.description,
+        permissions: form.value.permissions
+      })
+      if (res.code === 200) {
+        roles.value.push(res.data)
       }
     }
-  } else {
-    const newId = Math.max(...roles.value.map(r => r.id)) + 1
-    roles.value.push({
-      id: newId,
-      name: form.value.name,
-      description: form.value.description,
-      permissions: [...form.value.permissions],
-      userCount: 0
-    })
+    dialogOpen.value = false
+  } catch (error) {
+    console.error('操作失败:', error)
   }
-  dialogOpen.value = false
 }
 
-function confirmDelete() {
-  const index = roles.value.findIndex(r => r.id === deleteRole.value.id)
-  if (index !== -1) {
-    roles.value.splice(index, 1)
+async function confirmDelete() {
+  try {
+    const res = await deleteRoleApi(deleteRole.value.id)
+    if (res.code === 200) {
+      const index = roles.value.findIndex(r => r.id === deleteRole.value.id)
+      if (index !== -1) {
+        roles.value.splice(index, 1)
+      }
+    }
+    deleteDialogOpen.value = false
+    deleteRole.value = null
+  } catch (error) {
+    console.error('删除失败:', error)
   }
-  deleteDialogOpen.value = false
-  deleteRole.value = null
 }
 </script>
