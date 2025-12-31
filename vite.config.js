@@ -49,6 +49,8 @@ export default defineConfig(({ command, mode }) => {
       sourcemap: mode === 'development',
       // 启用压缩
       minify: 'esbuild',
+      // 确保 public 目录文件被正确复制
+      copyPublicDir: true,
       // 代码分割优化
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
