@@ -209,6 +209,12 @@ const menuItems = ref([
         label: '示例页面',
         icon: FileCode,
         path: '/admin/pages/demo'
+      },
+      {
+        key: 'typed',
+        label: 'Typed.js 演示',
+        icon: FileCode,
+        path: '/admin/pages/typed'
       }
     ]
   }

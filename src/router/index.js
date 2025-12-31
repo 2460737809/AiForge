@@ -153,6 +153,14 @@ const routes = [
         meta: {
           title: '示例页面'
         }
+      },
+      {
+        path: 'pages/typed',
+        name: 'AdminTyped',
+        component: () => import('@/views/admin/pages/TypedDemo.vue'),
+        meta: {
+          title: 'Typed.js 演示'
+        }
       }
     ]
   },
