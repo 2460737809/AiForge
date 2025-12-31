@@ -104,44 +104,54 @@ const routes = [
           title: '控制台'
         }
       },
+      // 系统管理模块
       {
-        path: 'users',
+        path: 'system/users',
         name: 'AdminUsers',
-        component: () => import('@/views/admin/Users.vue'),
+        component: () => import('@/views/admin/system/Users.vue'),
         meta: {
           title: '用户管理'
         }
       },
       {
-        path: 'roles',
+        path: 'system/roles',
         name: 'AdminRoles',
-        component: () => import('@/views/admin/Roles.vue'),
+        component: () => import('@/views/admin/system/Roles.vue'),
         meta: {
           title: '角色管理'
         }
       },
       {
-        path: 'menus',
+        path: 'system/menus',
         name: 'AdminMenus',
-        component: () => import('@/views/admin/Menus.vue'),
+        component: () => import('@/views/admin/system/Menus.vue'),
         meta: {
           title: '菜单管理'
         }
       },
       {
-        path: 'logs',
+        path: 'system/logs',
         name: 'AdminLogs',
-        component: () => import('@/views/admin/Logs.vue'),
+        component: () => import('@/views/admin/system/Logs.vue'),
         meta: {
           title: '操作日志'
         }
       },
       {
-        path: 'settings',
+        path: 'system/settings',
         name: 'AdminSettings',
-        component: () => import('@/views/admin/Settings.vue'),
+        component: () => import('@/views/admin/system/Settings.vue'),
         meta: {
           title: '系统设置'
+        }
+      },
+      // 业务页面模块
+      {
+        path: 'pages/demo',
+        name: 'AdminDemoPage',
+        component: () => import('@/views/admin/pages/DemoPage.vue'),
+        meta: {
+          title: '示例页面'
         }
       }
     ]

@@ -122,7 +122,7 @@ const menus = ref([
       {
         id: 21,
         name: '用户管理',
-        path: '/admin/users',
+        path: '/admin/system/users',
         type: '菜单',
         icon: Users,
         expanded: false
@@ -130,7 +130,7 @@ const menus = ref([
       {
         id: 22,
         name: '角色管理',
-        path: '/admin/roles',
+        path: '/admin/system/roles',
         type: '菜单',
         icon: Shield,
         expanded: false
@@ -138,7 +138,7 @@ const menus = ref([
       {
         id: 23,
         name: '菜单管理',
-        path: '/admin/menus',
+        path: '/admin/system/menus',
         type: '菜单',
         icon: Settings,
         expanded: false
@@ -156,7 +156,7 @@ const menus = ref([
       {
         id: 31,
         name: '操作日志',
-        path: '/admin/logs',
+        path: '/admin/system/logs',
         type: '菜单',
         icon: FileText,
         expanded: false
