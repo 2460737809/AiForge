@@ -6,8 +6,9 @@ import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   return {
+    base: '/AiForge/', // GitHub Pages 部署路径
     plugins: [
       vue(),
       // gzip 压缩
