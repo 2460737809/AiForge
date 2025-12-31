@@ -10,6 +10,7 @@
     "lint": "eslint . --ext vue,js,jsx,cjs,mjs --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "@vueuse/core": "^14.1.0",
     "axios": "^1.6.2",
     "cannon-es": "^0.20.0",
     "class-variance-authority": "^0.7.1",

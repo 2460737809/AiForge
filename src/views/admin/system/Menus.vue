@@ -100,14 +100,12 @@
           </div>
           <div class="space-y-2">
             <Label>菜单类型</Label>
-            <select
+            <Select
               v-model="form.type"
-              class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              :options="typeOptions"
+              placeholder="请选择菜单类型"
               required
-            >
-              <option value="目录">目录</option>
-              <option value="菜单">菜单</option>
-            </select>
+            />
           </div>
           <div class="space-y-2" v-if="form.type === '菜单'">
             <Label>路由路径</Label>
@@ -118,29 +116,19 @@
           </div>
           <div class="space-y-2">
             <Label>父级菜单</Label>
-            <select
+            <Select
               v-model="form.parentId"
-              class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option :value="null">无（作为一级菜单）</option>
-              <option v-for="menu in rootMenus" :key="menu.id" :value="menu.id">
-                {{ menu.name }}
-              </option>
-            </select>
+              :options="parentMenuOptions"
+              placeholder="请选择父级菜单"
+            />
           </div>
           <div class="space-y-2">
             <Label>图标</Label>
-            <select
+            <Select
               v-model="form.iconName"
-              class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="LayoutDashboard">仪表盘</option>
-              <option value="Settings">设置</option>
-              <option value="Users">用户</option>
-              <option value="Shield">盾牌</option>
-              <option value="FileText">文档</option>
-              <option value="Folder">文件夹</option>
-            </select>
+              :options="iconOptions"
+              placeholder="请选择图标"
+            />
           </div>
           <div class="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" @click="dialogOpen = false">
@@ -191,6 +179,7 @@ import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
 import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import { Select } from '@/components/ui/select'
 import { getMenuList, createMenu, updateMenu, deleteMenu as deleteMenuApi } from '@/api/admin/menus'
 import {
   ChevronDown,
@@ -230,9 +219,28 @@ const form = ref({
   iconName: 'LayoutDashboard'
 })
 
+const typeOptions = [
+  { value: '目录', label: '目录' },
+  { value: '菜单', label: '菜单' }
+]
+
+const iconOptions = [
+  { value: 'LayoutDashboard', label: '仪表盘' },
+  { value: 'Settings', label: '设置' },
+  { value: 'Users', label: '用户' },
+  { value: 'Shield', label: '盾牌' },
+  { value: 'FileText', label: '文档' },
+  { value: 'Folder', label: '文件夹' }
+]
+
 const menus = ref([])
 
 const rootMenus = computed(() => menus.value)
+
+const parentMenuOptions = computed(() => [
+  { value: null, label: '无（作为一级菜单）' },
+  ...menus.value.map(menu => ({ value: menu.id, label: menu.name }))
+])
 
 // 加载菜单列表
 async function loadMenus() {

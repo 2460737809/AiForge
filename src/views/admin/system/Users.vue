@@ -131,25 +131,21 @@
           </div>
           <div class="space-y-2">
             <Label>角色</Label>
-            <select
+            <Select
               v-model="form.role"
-              class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              :options="roleOptions"
+              placeholder="请选择角色"
               required
-            >
-              <option value="普通用户">普通用户</option>
-              <option value="管理员">管理员</option>
-            </select>
+            />
           </div>
           <div class="space-y-2">
             <Label>状态</Label>
-            <select
+            <Select
               v-model="form.status"
-              class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              :options="statusOptions"
+              placeholder="请选择状态"
               required
-            >
-              <option value="正常">正常</option>
-              <option value="禁用">禁用</option>
-            </select>
+            />
           </div>
           <div class="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" @click="dialogOpen = false">
@@ -202,6 +198,7 @@ import Dialog from '@/components/ui/dialog/Dialog.vue'
 import DialogContent from '@/components/ui/dialog/DialogContent.vue'
 import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
 import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
+import { Select } from '@/components/ui/select'
 import { getUserList, createUser, updateUser, deleteUser as deleteUserApi } from '@/api/admin/users'
 import {
   Search,
@@ -226,6 +223,16 @@ const form = ref({
   role: '普通用户',
   status: '正常'
 })
+
+const roleOptions = [
+  { value: '普通用户', label: '普通用户' },
+  { value: '管理员', label: '管理员' }
+]
+
+const statusOptions = [
+  { value: '正常', label: '正常' },
+  { value: '禁用', label: '禁用' }
+]
 
 const users = ref([])
 
