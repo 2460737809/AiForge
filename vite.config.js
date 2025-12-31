@@ -1,12 +1,31 @@
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import viteCompression from 'vite-plugin-compression'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
-    plugins: [vue()],
+    plugins: [
+      vue(),
+      // gzip 压缩
+      viteCompression({
+        verbose: true,
+        disable: false,
+        threshold: 10240, // 大于 10kb 才压缩
+        algorithm: 'gzip',
+        ext: '.gz'
+      }),
+      // 打包体积分析
+      visualizer({
+        open: false,
+        gzipSize: true,
+        brotliSize: true,
+        filename: 'dist/stats.html'
+      })
+    ],
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
@@ -27,11 +46,24 @@ export default defineConfig(({ command, mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: mode === 'development',
+      // 启用压缩
+      minify: 'esbuild',
+      // 代码分割优化
+      chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
           chunkFileNames: 'js/[name]-[hash].js',
           entryFileNames: 'js/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash].[ext]'
+          assetFileNames: 'assets/[name]-[hash].[ext]',
+          // 手动分包策略
+          manualChunks: {
+            // 将 Vue 核心库单独打包
+            'vue-vendor': ['vue', 'vue-router', 'pinia'],
+            // 将 UI 组件库单独打包
+            'ui-vendor': ['radix-vue', 'lucide-vue-next'],
+            // 将 Three.js 相关打包
+            'three-vendor': ['three', 'cannon-es']
+          }
         }
       }
     },
