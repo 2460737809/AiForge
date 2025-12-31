@@ -161,6 +161,14 @@ const routes = [
         meta: {
           title: 'Typed.js 演示'
         }
+      },
+      {
+        path: 'pages/party',
+        name: 'AdminParty',
+        component: () => import('@/views/admin/pages/PartyConfig.vue'),
+        meta: {
+          title: '动画配置'
+        }
       }
     ]
   },

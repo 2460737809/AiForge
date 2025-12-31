@@ -215,6 +215,12 @@ const menuItems = ref([
         label: 'Typed.js 演示',
         icon: FileCode,
         path: '/admin/pages/typed'
+      },
+      {
+        key: 'party',
+        label: '动画配置',
+        icon: FileCode,
+        path: '/admin/pages/party'
       }
     ]
   }

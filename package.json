@@ -19,6 +19,7 @@
     "clsx": "^2.1.1",
     "lucide-vue-next": "^0.562.0",
     "lunisolar": "^2.6.0",
+    "party-js": "^2.2.0",
     "pinia": "^2.1.7",
     "radix-vue": "^1.9.17",
     "tailwind-merge": "^3.4.0",
