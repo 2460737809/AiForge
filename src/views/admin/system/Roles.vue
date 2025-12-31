@@ -45,6 +45,79 @@
         </CardContent>
       </Card>
     </div>
+
+    <!-- 新增/编辑角色对话框 -->
+    <Dialog v-model:open="dialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ isEdit ? '编辑角色' : '新增角色' }}</DialogTitle>
+        </DialogHeader>
+        <form @submit.prevent="handleSubmit" class="space-y-4">
+          <div class="space-y-2">
+            <Label>角色名称</Label>
+            <Input
+              v-model="form.name"
+              placeholder="请输入角色名称"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label>角色描述</Label>
+            <Input
+              v-model="form.description"
+              placeholder="请输入角色描述"
+              required
+            />
+          </div>
+          <div class="space-y-2">
+            <Label>权限</Label>
+            <div class="space-y-2">
+              <div v-for="perm in allPermissions" :key="perm" class="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  :id="perm"
+                  v-model="form.permissions"
+                  :value="perm"
+                  class="rounded border-gray-300"
+                />
+                <Label :for="perm" class="cursor-pointer">{{ perm }}</Label>
+              </div>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" @click="dialogOpen = false">
+              取消
+            </Button>
+            <Button type="submit">
+              {{ isEdit ? '保存' : '创建' }}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 删除确认对话框 -->
+    <Dialog v-model:open="deleteDialogOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>确认删除</DialogTitle>
+        </DialogHeader>
+        <div class="py-4">
+          <p>确定要删除角色 <strong>{{ deleteRole?.name }}</strong> 吗？此操作无法撤销。</p>
+          <p v-if="deleteRole?.userCount > 0" class="mt-2 text-sm text-amber-600">
+            注意：该角色下还有 {{ deleteRole.userCount }} 个用户。
+          </p>
+        </div>
+        <div class="flex justify-end gap-2">
+          <Button variant="outline" @click="deleteDialogOpen = false">
+            取消
+          </Button>
+          <Button variant="destructive" @click="confirmDelete">
+            删除
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
@@ -56,7 +129,38 @@ import CardHeader from '@/components/ui/card/CardHeader.vue'
 import CardTitle from '@/components/ui/card/CardTitle.vue'
 import Button from '@/components/ui/button/Button.vue'
 import Badge from '@/components/ui/badge/Badge.vue'
+import Input from '@/components/ui/input/Input.vue'
+import Label from '@/components/ui/label/Label.vue'
+import Dialog from '@/components/ui/dialog/Dialog.vue'
+import DialogContent from '@/components/ui/dialog/DialogContent.vue'
+import DialogHeader from '@/components/ui/dialog/DialogHeader.vue'
+import DialogTitle from '@/components/ui/dialog/DialogTitle.vue'
 import { Plus, Edit, Trash2, Users } from 'lucide-vue-next'
+
+const allPermissions = [
+  '系统管理',
+  '用户管理',
+  '角色管理',
+  '菜单管理',
+  '日志查看',
+  '系统配置',
+  '内容编辑',
+  '内容发布',
+  '内容查看',
+  '角色查看'
+]
+
+const dialogOpen = ref(false)
+const deleteDialogOpen = ref(false)
+const isEdit = ref(false)
+const deleteRole = ref(null)
+
+const form = ref({
+  id: null,
+  name: '',
+  description: '',
+  permissions: []
+})
 
 const roles = ref([
   {
@@ -90,14 +194,62 @@ const roles = ref([
 ])
 
 function handleAdd() {
-  console.log('新增角色')
+  isEdit.value = false
+  form.value = {
+    id: null,
+    name: '',
+    description: '',
+    permissions: []
+  }
+  dialogOpen.value = true
 }
 
 function handleEdit(role) {
-  console.log('编辑角色:', role)
+  isEdit.value = true
+  form.value = {
+    id: role.id,
+    name: role.name,
+    description: role.description,
+    permissions: [...role.permissions]
+  }
+  dialogOpen.value = true
 }
 
 function handleDelete(role) {
-  console.log('删除角色:', role)
+  deleteRole.value = role
+  deleteDialogOpen.value = true
+}
+
+function handleSubmit() {
+  if (isEdit.value) {
+    const index = roles.value.findIndex(r => r.id === form.value.id)
+    if (index !== -1) {
+      roles.value[index] = {
+        ...roles.value[index],
+        name: form.value.name,
+        description: form.value.description,
+        permissions: [...form.value.permissions]
+      }
+    }
+  } else {
+    const newId = Math.max(...roles.value.map(r => r.id)) + 1
+    roles.value.push({
+      id: newId,
+      name: form.value.name,
+      description: form.value.description,
+      permissions: [...form.value.permissions],
+      userCount: 0
+    })
+  }
+  dialogOpen.value = false
+}
+
+function confirmDelete() {
+  const index = roles.value.findIndex(r => r.id === deleteRole.value.id)
+  if (index !== -1) {
+    roles.value.splice(index, 1)
+  }
+  deleteDialogOpen.value = false
+  deleteRole.value = null
 }
 </script>

@@ -13,7 +13,7 @@ export default defineConfig(({ command, mode }) => {
       },
     },
     server: {
-      port: 9999,
+      port: 10001,
       open: true,
       proxy: {
         '/api': {
