@@ -16,14 +16,24 @@ export const useAppStore = defineStore('app', () => {
   const setTheme = (newTheme) => {
     theme.value = newTheme
     localStorage.setItem('theme', newTheme)
-    
+
     // 更新DOM
     const root = document.documentElement
     if (newTheme === 'dark') {
       root.classList.add('dark')
+      document.documentElement.setAttribute('data-theme', 'dark')
     } else {
       root.classList.remove('dark')
+      document.documentElement.setAttribute('data-theme', 'light')
     }
+
+    // 通知vantajs更新主题
+    if (window.updateVantaTheme) {
+      window.updateVantaTheme()
+    }
+
+    // 触发自定义事件
+    window.dispatchEvent(new CustomEvent('theme-changed', { detail: { theme: newTheme } }))
   }
 
   const setLoading = (status) => {

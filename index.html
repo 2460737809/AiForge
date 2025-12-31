@@ -1,13 +1,119 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
+<!doctype html>
+<html lang="zh-CN" style="height: 100%;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vue3 Vite Project</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+      }
+      body {
+        background: #0a0a0a;
+      }
+      #app {
+        min-height: 100vh;
+      }
+    </style>
   </head>
-  <body>
+  <body id="my-background">
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.birds.min.js"></script>
+    <script>
+      let vantaEffect = null;
+
+      // 获取当前主题
+      const getTheme = () => {
+        return localStorage.getItem('theme') || 'light';
+      };
+
+      // 主题配置
+      const themeConfigs = {
+        dark: {
+          backgroundColor: 0x0a0a0a,
+          color1: 0x6366f1,
+          color2: 0x8b5cf6,
+          birdSize: 1.50,
+          quantity: 4.00
+        },
+        light: {
+          backgroundColor: 0xf0f9ff,
+          color1: 0x3b82f6,
+          color2: 0x06b6d4,
+          birdSize: 1.80,
+          quantity: 3.00
+        }
+      };
+
+      function initVanta() {
+        if (vantaEffect) {
+          vantaEffect.destroy();
+        }
+
+        const theme = getTheme();
+        const config = themeConfigs[theme];
+
+        vantaEffect = VANTA.BIRDS({
+          el: "#my-background",
+          mouseControls: true,
+          touchControls: true,
+          gyroControls: false,
+          minHeight: 200.00,
+          minWidth: 200.00,
+          scale: 1.00,
+          scaleMobile: 1.00,
+          color1: config.color1,
+          color2: config.color2,
+          backgroundColor: config.backgroundColor,
+          birdSize: config.birdSize,
+          wingSpan: 22.00,
+          speedLimit: 4.00,
+          separation: 32.00,
+          alignment: 20.00,
+          cohesion: 20.00,
+          quantity: config.quantity,
+          backgroundAlpha: 1.00
+        });
+
+        // 更新body背景色
+        document.body.style.background = config.backgroundColor === 0x0a0a0a ? '#0a0a0a' : '#f0f9ff';
+      }
+
+      // 等待DOM和资源加载完成后初始化
+      window.addEventListener('load', function() {
+        setTimeout(initVanta, 100);
+      });
+
+      // 监听窗口大小变化
+      let resizeTimeout;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(initVanta, 200);
+      });
+
+      // 监听主题变化(通过localStorage)
+      window.addEventListener('storage', function(e) {
+        if (e.key === 'theme') {
+          initVanta();
+        }
+      });
+
+      // 监听自定义主题切换事件
+      window.addEventListener('theme-changed', function() {
+        initVanta();
+      });
+
+      // 暴露全局方法供Vue调用
+      window.updateVantaTheme = function() {
+        initVanta();
+      };
+    </script>
   </body>
 </html>

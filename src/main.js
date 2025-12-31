@@ -18,4 +18,9 @@ app.use(createPinia())
 app.use(router)
 
 // 挂载应用
-app.mount('#app')
+const appInstance = app.mount('#app')
+
+// 初始化主题
+import { useAppStore } from '@/stores/app'
+const appStore = useAppStore()
+appStore.initApp()
